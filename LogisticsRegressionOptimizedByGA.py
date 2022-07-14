@@ -1,5 +1,5 @@
 import numpy as np
-# In[]: Genetic Algorithm
+# In[]: Logistic regression optimized by Genetic Algorithm
 class Ga_Algorithm_Continuous:
     def __init__(self,Iter_Number = 10000):
         self.Iter_Number = Iter_Number
