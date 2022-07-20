@@ -51,10 +51,25 @@ class SelfOrganizingMap_Clustering:
 import sklearn.datasets as dataset
 Iris_Data = dataset.load_iris()
 Input = Iris_Data["data"]
-SOM = SelfOrganizingMap_Clustering(10,Grid = [2,3])
+Grid = [9,1]
+SOM = SelfOrganizingMap_Clustering(10,Grid = Grid)
 model = SOM.SOM_Clustering_Fit(Input)
 Weights =SOM.Weights
 Cluster = SOM.Winner
 print(Cluster)
 print(np.sum(SOM.Winner,axis=0))
 
+# In[]:
+import matplotlib.pyplot as plt
+color = ['red','blue', 'black', 'green', 'grey','cyan','yellow','brown','purple']
+for i in range(Grid[0]*Grid[1]):
+    plt.scatter(Input[Cluster[:,i]==1,0], Input[Cluster[:,i]==1,1],color = color[i])
+    plt.scatter(Weights[i,0],Weights[i,1],marker= 'x', color = color[i])
+    plt.xlabel('X1')
+    plt.ylabel('x2')
+plt.figure()
+for i in range(Grid[0]*Grid[1]):
+    plt.scatter(Input[Cluster[:,i]==1,2], Input[Cluster[:,i]==1,3],color = color[i])
+    plt.scatter(Weights[i,2],Weights[i,3],marker= 'x', color = color[i])
+    plt.xlabel('X3')
+    plt.ylabel('x4')
