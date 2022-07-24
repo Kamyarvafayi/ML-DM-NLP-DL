@@ -15,6 +15,11 @@ class SelfOrganizingMap_Clustering:
         Model = KMeans(n_clusters=self.Grid_Rows*self.Grid_Columns)
         Model = Model.fit(self.Input)
         self.Weights = Model.cluster_centers_
+    def PCA_Initialization(self):
+        Cov_MTX = np.cov(self.Input.T)
+        eig_VAl , Eig_Vec = np.linalg.eig(Cov_MTX)
+        Random_Coeff = np.array([[np.random.randn() for i in range(2)] for j in range(self.Grid_Rows*self.Grid_Columns)])
+        self.Weights = np.array([Random_Coeff[i,0] * Eig_Vec[0] + Random_Coeff[i,1]*Eig_Vec[1] for i in range(self.Grid_Rows*self.Grid_Columns)])
     def Find_Distance(self):
         self.Distance = np.array([[np.linalg.norm(self.Input[i]-self.Weights[j]) for j in range(self.Grid_Rows*self.Grid_Columns)]
                                  for i in range(self.Input.shape[0])])
@@ -32,36 +37,38 @@ class SelfOrganizingMap_Clustering:
     def Update_Weights(self):
         for i in range(self.Input.shape[0]):
             for j in range(self.Grid_Rows*self.Grid_Columns):
-                step = self.Learning_Rate*np.exp(-1*np.linalg.norm(self.NeuronsPositions[np.argmax(self.Winner[i])]-self.NeuronsPositions[j])**2/(2*self.Sigma**2)) * np.linalg.norm(self.Input[i]-self.Weights[j])
-                self.Weights[j] = self.Weights[j] + step/self.Input.shape[0]
-    def SOM_Clustering_Fit(self, Input, Initial_Learning_Rate = 0.1, Initial_Sigma = 1):
+                step = self.Learning_Rate*np.exp(-1*np.linalg.norm(self.NeuronsPositions[np.argmax(self.Winner[i])]-self.NeuronsPositions[j])**2/(2*self.Sigma**2)) * (self.Input[i]-self.Weights[j])
+                self.Weights[j] = self.Weights[j] + step
+    def SOM_Clustering_Fit(self, Input, Initial_Learning_Rate = 1, Initial_Sigma = 1, Initialization = "Random"):
         self.Input = Input
         self.Learning_Rate = Initial_Learning_Rate
         self.Sigma = Initial_Sigma
         self.Create_Neuron_Position_array()
-        self.Initialization()
+        if Initialization =="Random":
+            self.Initialization()
+        elif Initialization=="PCA":    
+            self.PCA_Initialization()
+        print(self.Weights)
         for i in range(self.Iter):
             self.Find_Distance()
             self.Find_Winner()
             self.Update_Weights() 
-            #print(self.Winner)
-            self.Learning_Rate *= 0.63
-            self.Sigma *= np.exp(i/self.Iter)
+            self.Learning_Rate *= (1-i/self.Iter)
+            self.Sigma *= np.exp(-i/self.Iter)
 # In[]:
 import sklearn.datasets as dataset
 Iris_Data = dataset.load_iris()
 Input = Iris_Data["data"]
-Grid = [9,1]
-SOM = SelfOrganizingMap_Clustering(10,Grid = Grid)
+Grid = [2,2]
+SOM = SelfOrganizingMap_Clustering(100,Grid = Grid)
 model = SOM.SOM_Clustering_Fit(Input)
 Weights =SOM.Weights
 Cluster = SOM.Winner
 print(Cluster)
 print(np.sum(SOM.Winner,axis=0))
-
 # In[]:
 import matplotlib.pyplot as plt
-color = ['red','blue', 'black', 'green', 'grey','cyan','yellow','brown','purple']
+color = ['red','blue', 'black', 'green', 'grey','cyan','yellow','brown','purple','orange']
 for i in range(Grid[0]*Grid[1]):
     plt.scatter(Input[Cluster[:,i]==1,0], Input[Cluster[:,i]==1,1],color = color[i])
     plt.scatter(Weights[i,0],Weights[i,1],marker= 'x', color = color[i])
