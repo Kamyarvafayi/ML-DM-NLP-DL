@@ -1,0 +1,44 @@
+# In[]: mahalonobis distance and Outlier Detection using it
+import pandas as pd
+import numpy as np
+from scipy.stats import *
+import matplotlib.pyplot as plt
+class Mahalonobis_Distance:
+    def __init__(self, Dataset, Thershold = 0.95):
+        import numpy as np
+        import pandas as pd
+        self.Data = Dataset
+        self.Thershold = Thershold
+        self.Data_Shape = self.Data.shape
+    def Find_Mahalonobis(self):
+        self.Mean = np.matrix(self.Data.mean())
+        self.Cov_Mtx = np.matrix(self.Data.cov())
+        self.Cov_Mtx_Inv = np.linalg.inv(self.Cov_Mtx)
+        self.Mahalonobis = self.Data.copy()
+        self.Mahalonobis["Mahalonobis_Dist"] = np.array([float((np.matrix(self.Data.iloc[i])-self.Mean)@self.Cov_Mtx_Inv@(np.matrix(self.Data.iloc[i])-self.Mean).T) for i in range(self.Data_Shape[0])])
+        print(self.Mahalonobis)
+    def Find_Outlier(self):
+        self.Find_Mahalonobis()
+        self.Mahalonobis["Is Outlier"] = np.array(["No" for i in range(self.Data_Shape[0])]) 
+        for i in range(self.Data_Shape[0]):
+            if self.Mahalonobis["Mahalonobis_Dist"][i]>chi2.ppf(self.Thershold, df=self.Data_Shape[1]):
+                self.Mahalonobis["Is Outlier"][i] ="Yes"
+        plt.scatter(self.Data.loc[self.Mahalonobis["Is Outlier"]=="No"].iloc[:,0], self.Data.loc[self.Mahalonobis["Is Outlier"]=="No"].iloc[:,1], c = 'Green', marker = 'o')
+        plt.scatter(self.Data.loc[self.Mahalonobis["Is Outlier"]=="Yes"].iloc[:,0], self.Data.loc[self.Mahalonobis["Is Outlier"]=="Yes"].iloc[:,1], c = 'Red', marker = 'x')
+
+# In[]: Creating a dataset for checking the code
+np.random.seed(seed=1)
+Dataset_Size = 1000
+Height = np.array([np.random.randint(150,200) for i in range(Dataset_Size)])
+Height = np.append(Height,np.mean(Height))
+Height = np.append(Height, 200)
+Weight = np.array([np.random.randint(50,100) for i in range(Dataset_Size)])  
+Weight = np.append(Weight,np.mean(Weight))  
+Weight = np.append(Weight,45)
+Dataset = pd.DataFrame(data = np.array([Height , Weight]).T, columns = ["Height", "Weight"])
+
+# In[]: An object 
+M_Distance = Mahalonobis_Distance(Dataset, 0.90)
+M_Distance.Find_Mahalonobis()
+M_Distance.Find_Outlier()
+Mahalonobis = M_Distance.Mahalonobis
